@@ -3,16 +3,14 @@
 
 #include <type_traits>
 
-#include "hashable.h"
-
 using namespace std;
 
 constexpr int DEFAULT_CAPACITY = 100;
 
-template <typename T>
+template <typename T, typename K>
 class SimpleHashTable
 {
-    static_assert(is_base_of<Hashable, T>::value, "T must inherit from Hashable");
+    //static_assert(is_base_of<Hashable, T>::value, "T must inherit from Hashable");
 
 public:
     SimpleHashTable();
@@ -21,66 +19,64 @@ public:
 
     virtual ~SimpleHashTable();
 
-    void insert(T data);
+    void put(K key, T data);
 
-    void remove(T data);
+    T* get(K key) const;
 
-    T* find(T data) const;
+    void remove(K key);
 
-    bool exists(T data) const;
+    bool exists(K key) const;
 private:
-    int calcPosFromHash(T data) const;
+    size_t calcPosFromKey(K key) const;
 
     T** array;
     size_t capacity;
 };
 
-template <typename T>
-SimpleHashTable<T>::SimpleHashTable(): capacity(DEFAULT_CAPACITY)
+template <typename T, typename K>
+SimpleHashTable<T, K>::SimpleHashTable(): capacity(DEFAULT_CAPACITY)
 {
     array = new T*[capacity];
 }
 
-template<typename T>
-SimpleHashTable<T>::SimpleHashTable(size_t capacity): capacity(capacity)
+template <typename T, typename K>
+SimpleHashTable<T, K>::SimpleHashTable(size_t capacity): capacity(capacity)
 {
     array = new T*[capacity];
 }
 
-template <typename T>
-SimpleHashTable<T>::~SimpleHashTable() = default;
+template <typename T, typename K>
+SimpleHashTable<T, K>::~SimpleHashTable() = default;
 
-template <typename T>
-void SimpleHashTable<T>::insert(T data)
+template <typename T, typename K>
+void SimpleHashTable<T, K>::put(K key, T data)
 {
-    array[calcPosFromHash(data)] = &data;
+    array[calcPosFromKey(key)] = &data;
 }
 
-template <typename T>
-void SimpleHashTable<T>::remove(T data)
+template <typename T, typename K>
+T* SimpleHashTable<T, K>::get(K key) const
 {
-    array[calcPosFromHash(data)] = nullptr;
+    return array[calcPosFromKey(key)];
 }
 
-template <typename T>
-T* SimpleHashTable<T>::find(T data) const
+template <typename T, typename K>
+void SimpleHashTable<T, K>::remove(K key)
 {
-    return array[calcPosFromHash(data)];
+    array[calcPosFromKey(key)] = nullptr;
 }
 
-template <typename T>
-bool SimpleHashTable<T>::exists(T data) const
+template <typename T, typename K>
+bool SimpleHashTable<T, K>::exists(K key) const
 {
-    T* value = array[calcPosFromHash(data)];
-
-    return value != nullptr;
+    return array[calcPosFromKey(key)] != nullptr;
 }
 
-template<typename T>
-int SimpleHashTable<T>::calcPosFromHash(T data) const {
-    int k = data.hashCode();
+template <typename T, typename K>
+size_t SimpleHashTable<T, K>::calcPosFromKey(K key) const {
+    size_t k = hash<K>{}(key);
 
-    return k % DEFAULT_CAPACITY;
+    return k % capacity;
 }
 
 #endif // SIMPLEHASHTABLE_H
